@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atelier Espaces Verts</title>
+<meta name="theme-color" content="#1F4D3A">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2EE; --surface:#FFFFFF; --ink:#18241E; --muted:#5B6B62; --line:#D3DCD5;
+  --green:#1F4D3A; --green-soft:#DCE9E1; --yellow:#E8B500; --yellow-soft:#FBF0C6;
+  --red:#B3261E; --red-soft:#F7DEDC; --on-green:#FFFFFF;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101713; --surface:#18221C; --ink:#E6EEE8; --muted:#9AAAA0; --line:#2C3A31;
+    --green:#7FC4A0; --green-soft:#1F3328; --yellow:#F2C94C; --yellow-soft:#3A3115;
+    --red:#F2948C; --red-soft:#3D1F1C; --on-green:#0E1A13; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101713; --surface:#18221C; --ink:#E6EEE8; --muted:#9AAAA0; --line:#2C3A31;
+  --green:#7FC4A0; --green-soft:#1F3328; --yellow:#F2C94C; --yellow-soft:#3A3115;
+  --red:#F2948C; --red-soft:#3D1F1C; --on-green:#0E1A13; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Barlow",system-ui,-apple-system,"Segoe UI",sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--green)}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 40px}
+header.top{background:var(--green);color:var(--on-green);padding:18px 16px 0;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header.top .in{max-width:720px;margin:0 auto}
+h1{font:700 30px/1.05 "Barlow Condensed",system-ui,sans-serif;margin:0;letter-spacing:.2px}
+.sub{opacity:.85;font-size:14px;margin:4px 0 12px}
+nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+nav a{flex:1 0 auto;text-align:center;padding:10px 5px 12px;color:var(--on-green);text-decoration:none;font-weight:600;font-size:14px;opacity:.75;border-bottom:4px solid transparent}
+nav a[aria-current="page"]{opacity:1;border-bottom-color:var(--yellow)}
+nav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.notice{margin:14px 0 0;padding:10px 12px;border-radius:8px;background:var(--yellow-soft);font-size:14px}
+.summary{display:flex;gap:10px;margin:16px 0 10px;flex-wrap:wrap}
+.summary div{flex:1;min-width:70px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.summary b{display:block;white-space:nowrap;font:700 24px/1 "Barlow Condensed",sans-serif}
+.summary span{font-size:13px;color:var(--muted)}
+.summary .late b{color:var(--red)}
+.summary .soon b{color:#9A7700}
+:root[data-theme="dark"] .summary .soon b{color:var(--yellow)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .summary .soon b{color:var(--yellow)}}
+.tools{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+.tools input,.tools select{flex:1;min-width:140px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea{min-height:76px;resize:vertical}
+label{display:block;font-weight:600;font-size:14px;margin:12px 0 4px}
+.hint{font-weight:400;color:var(--muted)}
+button{font:600 15px "Barlow",sans-serif;border:0;border-radius:8px;padding:11px 16px;cursor:pointer;background:var(--green);color:var(--on-green)}
+button.ghost{background:transparent;color:var(--green);border:1px solid var(--line)}
+button.danger{background:transparent;color:var(--red);border:1px solid var(--line)}
+.list{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.list li{border-top:1px solid var(--line)}
+.list li:first-child{border-top:0}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;color:inherit;border-radius:0;padding:12px 14px;font-weight:400}
+.row:hover{background:var(--green-soft)}
+.bar{width:6px;align-self:stretch;border-radius:3px;background:var(--green-soft)}
+.bar.late{background:var(--red)} .bar.soon{background:var(--yellow)} .bar.ok{background:var(--green)}
+.main{flex:1;min-width:0}
+.code{font:700 15px "Barlow Condensed",sans-serif;color:var(--muted)}
+.name{font-weight:600;font-size:17px}
+.meta{font-size:14px;color:var(--muted)}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:var(--green-soft);color:var(--green)}
+.pill.watch{background:var(--yellow-soft);color:var(--ink)}
+.pill.down{background:var(--red-soft);color:var(--red)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:22px;text-align:center}
+.empty p{margin:0 0 12px}
+.entry{padding:12px 14px}
+.entry .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.entry p{margin:6px 0 0}
+h2{font:700 22px "Barlow Condensed",sans-serif;margin:22px 0 8px}
+dialog{border:0;border-radius:14px;padding:0;width:min(560px,94vw);max-height:90vh;background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(10,20,15,.55)}
+.dlg{padding:18px 18px 20px;overflow:auto;max-height:90vh}
+.dlg h2{margin-top:0}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:460px){.grid2{grid-template-columns:1fr}}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:15px;margin:8px 0}
+.facts dt{color:var(--muted)} .facts dd{margin:0;font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.thumbs button,.thumbs .pv{padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--green-soft);width:76px;height:76px;position:relative}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.pv .x{position:absolute;top:2px;right:2px;width:24px;height:24px;padding:0;border-radius:99px;background:rgba(0,0,0,.65);color:#fff;font-size:15px;line-height:24px}
+.photoBtn{display:inline-block;margin-top:4px}
+#lb{width:min(900px,96vw);background:#000}
+#lb img{display:block;max-width:100%;max-height:80vh;margin:0 auto}
+#lb .actions{padding:0 12px 12px}
+[hidden]{display:none!important}
+
+.seg{display:flex;gap:6px;margin:16px 0 4px;flex-wrap:wrap}
+.seg a{padding:8px 14px;border-radius:99px;border:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:600;font-size:15px;background:var(--surface)}
+.seg a[aria-current="page"]{background:var(--green);color:var(--on-green);border-color:var(--green)}
+.crow{display:flex;gap:10px;align-items:center;padding:10px 14px}
+.crow .main{min-width:0}
+.crow input{width:110px;flex:none;text-align:right}
+.chk{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
+.tog{display:flex;gap:4px;flex:none}
+.tog button{padding:8px 12px;font-size:14px;background:transparent;color:var(--muted);border:1px solid var(--line)}
+.tog button.on.okb{background:var(--green);color:var(--on-green);border-color:var(--green)}
+.tog button.on.pbb{background:var(--red);color:#fff;border-color:var(--red)}
+.pill.step0{background:var(--red-soft);color:var(--red)}
+.pill.step1{background:var(--yellow-soft);color:var(--ink)}
+.pill.step2{background:var(--green-soft);color:var(--green)}
+.pill.step3{background:var(--line);color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.kpis div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+.kpis b{display:block;font:700 30px/1 "Barlow Condensed",sans-serif}
+.kpis span{font-size:13px;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+.card h3{font:700 18px "Barlow Condensed",sans-serif;margin:0 0 6px}
+.card p{margin:4px 0}
+.small{font-size:13px}
+
+.btnlink{display:inline-block;font:600 15px "Barlow",sans-serif;border-radius:8px;padding:11px 16px;text-decoration:none;color:var(--green);border:1px solid var(--line)}
+#login{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+#login .box{width:min(380px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px}
+#login img{width:72px;height:72px;border-radius:16px;display:block;margin-bottom:12px}
+#login h2{margin:0 0 4px}
+</style>
+</head>
+<body>
+<div id="login" hidden><div class="box"><img src="icon-192.png" alt=""><h2>Atelier Espaces Verts</h2><p class="meta">Entre le code d’accès donné par le responsable des Espaces Verts.</p><label for="lgCode">Code d’accès</label><input id="lgCode" inputmode="numeric" autocomplete="off"><p class="meta" id="lgErr" style="color:var(--red)" hidden></p><div class="actions"><button id="lgBtn">Entrer</button></div></div></div>
+<header class="top"><div class="in">
+  <h1>Atelier Espaces Verts</h1>
+  <p class="sub">Carnet d’entretien du matériel Golf et Jardin, Club Med Cap Skirring</p>
+  <nav>
+    <a href="#machines" data-v="machines">Machines</a>
+    <a href="#intervention" data-v="saisie">Saisie</a>
+    <a href="#pieces" data-v="pieces">Pièces</a>
+    <a href="#bilan" data-v="bilan">Bilan</a>
+    <a href="#historique" data-v="historique">Historique</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <p class="notice" id="notice" hidden></p>
+
+  <section id="v-machines">
+    <div class="summary" id="summary"></div>
+    <div class="tools">
+      <input id="q" type="search" placeholder="Chercher une machine" aria-label="Chercher une machine">
+      <select id="fSecteur" aria-label="Secteur"><option value="">Golf et Jardin</option><option>Golf</option><option>Jardin</option></select>
+    </div>
+    <div id="machList"></div>
+    <div class="actions" style="justify-content:flex-start"><button class="ghost" id="btnAddMach" data-write>Ajouter une machine</button></div>
+  </section>
+
+  <section id="v-saisie" hidden>
+    <div class="seg">
+      <a href="#intervention" data-s="intervention">Intervention</a>
+      <a href="#compteurs" data-s="compteurs">Compteurs</a>
+      <a href="#controle" data-s="controle">Contrôle du matin</a>
+    </div>
+    <div id="s-intervention"><h2>Noter une intervention</h2><div id="formWrap"></div></div>
+    <div id="s-compteurs" hidden><h2>Relevé des compteurs</h2><p class="meta">Tape les heures affichées sur chaque machine, puis enregistre tout d’un coup.</p><div id="cptWrap"></div></div>
+    <div id="s-controle" hidden><h2>Contrôle avant utilisation</h2><div id="ctrlWrap"></div><h2>Derniers contrôles</h2><div id="ctrlList"></div></div>
+  </section>
+
+  <section id="v-pieces" hidden>
+    <h2>Pièces à commander</h2>
+    <div class="summary" id="pSummary"></div>
+    <div class="tools">
+      <select id="pFiltre" aria-label="Filtre"><option value="encours">En cours (pas encore reçues)</option><option value="">Toutes</option><option>À trouver</option><option>Fournisseur trouvé</option><option>Commandée</option><option>Reçue</option></select>
+    </div>
+    <div id="pList"></div>
+    <div class="actions" style="justify-content:flex-start"><button class="ghost" id="btnAddPiece" data-write>Ajouter une pièce</button></div>
+  </section>
+
+  <section id="v-bilan" hidden>
+    <h2>Bilan du mois</h2>
+    <div class="tools"><input id="bMois" type="month" aria-label="Mois"></div>
+    <div id="bilanWrap"></div>
+    <div class="actions" style="justify-content:flex-start"><button class="ghost" id="btnBilanCsv">Préparer le bilan dans Google Sheets</button><a class="ghost btnlink" id="bilanLink" target="_blank" rel="noopener" hidden>Ouvrir le bilan</a></div>
+  </section>
+
+  <section id="v-historique" hidden>
+    <h2>Historique des interventions</h2>
+    <div class="tools">
+      <select id="hMach" aria-label="Machine"></select>
+      <select id="hType" aria-label="Type"><option value="">Tous les types</option><option>Préventif</option><option>Correctif</option><option>Panne</option></select>
+    </div>
+    <div id="histList"></div>
+    <div class="actions" style="justify-content:flex-start"><a class="ghost btnlink" id="btnExport" target="_blank" rel="noopener" hidden>Ouvrir le tableau Google Sheets</a></div>
+  </section>
+  <footer class="meta small" style="margin-top:36px;padding-top:14px;border-top:1px solid var(--line)">Service Espaces Verts, Club Med Cap Skirring.<br>Outil mis en place par Khadim Diouf, Responsable des Espaces Verts.</footer>
+</main>
+
+<dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+<dialog id="lb"><img id="lbImg" alt="Photo de l’intervention"><div class="actions"><button class="ghost" id="lbClose" style="color:#fff">Fermer</button></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+var COLS=["machines","entretiens","pieces","controles","immobilisations"];
+var S={machines:[],entretiens:[],pieces:[],controles:[],immobilisations:[],canWrite:true,assets:true,url:""};
+var $=function(id){return document.getElementById(id)};
+var qa=function(root,sel){return Array.prototype.slice.call(root.querySelectorAll(sel))};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function fmtDate(s){if(!s)return"";var p=String(s).split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:s}
+function dt(s){return new Date(s+"T00:00:00")}
+function diffDays(a,b){return Math.round((dt(b)-dt(a))/86400000)}
+function addDays(s,n){var d=dt(s);d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function num(v){if(v===""||v==null)return null;var n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:null}
+function toast(t){var el=$("toast"),dl=document.querySelector("dialog[open]");(dl||document.body).appendChild(el);el.textContent=t;el.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(function(){el.classList.remove("show")},2600)}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function mach(id){return S.machines.find(function(x){return x.id===id})}
+function mLabel(id){var m=mach(id);return m?m.code+" – "+m.nom:"Machine supprimée"}
+function byCode(a,b){return String(a.code).localeCompare(String(b.code))}
+
+/* ---------- Stockage (Google Sheets) ---------- */
+var CODE_KEY="atelier-ev-code";
+function getCode(){try{return localStorage.getItem(CODE_KEY)||""}catch(e){return""}}
+function setCode(v){try{if(v)localStorage.setItem(CODE_KEY,v);else localStorage.removeItem(CODE_KEY)}catch(e){}}
+function call(fn){var args=Array.prototype.slice.call(arguments,1);
+  if(typeof API_URL!=="string"||API_URL.indexOf("https://script.google.com/")!==0)return Promise.reject({code:"config",message:"Lien du serveur non configuré (fichier config.js)."});
+  return fetch(API_URL,{method:"POST",body:JSON.stringify({action:fn,args:args,code:getCode()})}).then(function(r){return r.json()}).catch(function(){throw{code:"reseau",message:"Pas de connexion internet"}}).then(function(j){if(j.error)throw{code:j.code,message:j.error};return j.result})}
+function strip(o){var c={};for(var k in o)if(k!=="id")c[k]=o[k];return c}
+function apply(all){if(!all)return;COLS.forEach(function(c){S[c]=all[c]||[]});if(all._url){S.url=all._url;var a=$("btnExport");a.href=all._url;a.hidden=false}render()}
+async function addDoc(c,data){apply(await call("addDoc",c,data))}
+async function setDoc(c,id,data){apply(await call("setDoc",c,id,strip(data)))}
+async function patchDoc(c,id,p){apply(await call("patchDoc",c,id,p))}
+async function delDoc(c,id){apply(await call("delDoc",c,id))}
+function photoUrl(id){return"https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1600"}
+function toDataUrl(b){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=rej;r.readAsDataURL(b)})}
+
+/* ---------- Calculs ---------- */
+function histOf(id){return S.entretiens.filter(function(e){return e.machineId===id}).sort(function(a,b){return(b.date||"").localeCompare(a.date||"")||(b.createdAt||0)-(a.createdAt||0)})}
+var LVL={late:0,soon:1,ok:2,none:3};
+function dueOf(m){
+  var it=num(m.intervalle),jr=num(m.intervalleJours),cpt=num(m.compteur);
+  if(!it&&!jr)return{lvl:"none",txt:"Intervalle d’entretien non renseigné"};
+  var prev=histOf(m.id).filter(function(e){return e.type==="Préventif"});
+  if(!prev.length)return{lvl:"none",txt:"Aucun entretien préventif noté"};
+  var res=[];
+  if(it){var hs=prev.map(function(e){return num(e.compteur)}).filter(function(v){return v!=null});
+    if(hs.length&&cpt!=null){var next=Math.max.apply(null,hs)+it,r=next-cpt;
+      if(r<=0)res.push({lvl:"late",txt:"Entretien dépassé de "+Math.round(-r)+" h (prévu à "+next+" h)"});
+      else if(r<=Math.max(25,it*0.1))res.push({lvl:"soon",txt:"Entretien dans "+Math.round(r)+" h (à "+next+" h)"});
+      else res.push({lvl:"ok",txt:"Prochain entretien à "+next+" h (dans "+Math.round(r)+" h)"});}
+    else if(!jr)return{lvl:"none",txt:cpt==null?"Relève le compteur pour suivre l’entretien":"Note le compteur lors du prochain entretien préventif"};}
+  if(jr){var last=prev.map(function(e){return e.date}).filter(Boolean).sort().pop();
+    if(last){var nd=addDays(last,jr),rj=diffDays(today(),nd);
+      if(rj<0)res.push({lvl:"late",txt:"Entretien dépassé de "+(-rj)+" j (prévu le "+fmtDate(nd)+")"});
+      else if(rj<=Math.max(3,Math.round(jr*0.2)))res.push({lvl:"soon",txt:"Entretien le "+fmtDate(nd)+" (dans "+rj+" j)"});
+      else res.push({lvl:"ok",txt:"Prochain entretien le "+fmtDate(nd)+" (dans "+rj+" j)"});}}
+  if(!res.length)return{lvl:"none",txt:"Aucun entretien préventif noté"};
+  res.sort(function(a,b){return LVL[a.lvl]-LVL[b.lvl]});return res[0];
+}
+function panneJours(m){return m.statut==="En panne"&&m.panneDepuis?Math.max(0,diffDays(m.panneDepuis,today())):null}
+function pill(st){var c=st==="En panne"?"down":st==="À surveiller"?"watch":"ok";return'<span class="pill '+c+'">'+esc(st||"En service")+"</span>"}
+var STEPS=["À trouver","Fournisseur trouvé","Commandée","Reçue"];
+function stepPill(st){var i=Math.max(0,STEPS.indexOf(st));return'<span class="pill step'+i+'">'+esc(STEPS[i])+"</span>"}
+
+/* Changement d’état : calcule les jours d’immobilisation */
+async function statutPatch(m,newSt,date,panneDate){
+  var p={statut:newSt};date=date||today();
+  if(newSt==="En panne"){p.panneDepuis=panneDate!==undefined?panneDate:(m.statut==="En panne"?(m.panneDepuis||""):date)}
+  else if(m.statut==="En panne"){
+    var deb=panneDate||m.panneDepuis;
+    if(deb){await addDoc("immobilisations",{machineId:m.id,debut:deb,fin:date,jours:Math.max(0,diffDays(deb,date)),createdAt:Date.now()})}
+    p.panneDepuis="";
+  }
+  return p;
+}
+
+/* ---------- Photos ---------- */
+function shrink(file){return new Promise(function(res,rej){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var M=1600,w=im.naturalWidth,h=im.naturalHeight,r=Math.min(1,M/Math.max(w,h));var c=document.createElement("canvas");c.width=Math.round(w*r);c.height=Math.round(h*r);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?res(b):rej()},"image/jpeg",0.8)};im.onerror=function(){URL.revokeObjectURL(u);rej()};im.src=u})}
+function showPending(){var el=$("iPhList");if(!el)return;var p=formState.pending||[];el.innerHTML=p.map(function(b,i){return'<span class="pv"><img alt="Photo '+(i+1)+'" data-i="'+i+'"><button type="button" class="x" aria-label="Retirer la photo" data-rm="'+i+'">×</button></span>'}).join("");qa(el,"img[data-i]").forEach(function(img){img.src=URL.createObjectURL(p[+img.getAttribute("data-i")])});qa(el,"[data-rm]").forEach(function(b){b.onclick=function(){p.splice(+b.getAttribute("data-rm"),1);showPending()}})}
+function openPhoto(id){$("lbImg").src=photoUrl(id);$("lb").showModal()}
+$("lbClose").onclick=function(){$("lb").close()};
+function bindPhotos(root){qa(root,"[data-photo]").forEach(function(b){b.onclick=function(){openPhoto(b.getAttribute("data-photo"))}})}
+
+/* ---------- Affichage général ---------- */
+function render(){renderMachines();renderForm();renderCompteurs();renderCtrl();renderPieces();renderBilan();renderHist();applyWrite()}
+function applyWrite(){qa(document,"[data-write]").forEach(function(el){el.hidden=!S.canWrite})}
+function busy(container){return document.activeElement&&container.contains(document.activeElement)&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)}
+function machineOptions(sel,allLabel){
+  return'<option value="">'+(allLabel||"Choisir la machine")+'</option>'+S.machines.slice().sort(byCode).map(function(m){return'<option value="'+esc(m.id)+'"'+(m.id===sel?" selected":"")+">"+esc(m.code+" – "+m.nom)+"</option>"}).join("");
+}
+
+/* ---------- Machines ---------- */
+function renderMachines(){
+  var late=0,soon=0,down=0;
+  S.machines.forEach(function(m){var d=dueOf(m);if(d.lvl==="late")late++;if(d.lvl==="soon")soon++;if(m.statut==="En panne")down++});
+  var dispo=S.machines.length?Math.round((S.machines.length-down)/S.machines.length*100):0;
+  $("summary").innerHTML='<div><b>'+dispo+' %</b><span>du parc disponible</span></div><div class="late"><b>'+down+'</b><span>en panne</span></div><div class="late"><b>'+late+'</b><span>entretiens dépassés</span></div><div class="soon"><b>'+soon+'</b><span>entretiens proches</span></div>';
+  var q=$("q").value.trim().toLowerCase(),sec=$("fSecteur").value;
+  var list=S.machines.filter(function(m){return(!sec||m.secteur===sec)&&(!q||(m.code+" "+m.nom+" "+(m.fonction||"")).toLowerCase().indexOf(q)>-1)});
+  list.sort(function(a,b){var pa=a.statut==="En panne"?-1:LVL[dueOf(a).lvl],pb=b.statut==="En panne"?-1:LVL[dueOf(b).lvl];return pa-pb||byCode(a,b)});
+  if(!S.machines.length){$("machList").innerHTML='<div class="empty"><p><b>Aucune machine enregistrée.</b></p><button data-write id="firstMach">Ajouter la première machine</button></div>';$("firstMach").onclick=function(){machineForm(null)};return}
+  if(!list.length){$("machList").innerHTML='<div class="empty"><p>Aucune machine ne correspond à cette recherche.</p></div>';return}
+  $("machList").innerHTML='<ul class="list">'+list.map(function(m){var d=dueOf(m),pj=panneJours(m);
+    var line2=m.statut==="En panne"?(pj!=null?"Immobilisée depuis "+pj+" j (le "+fmtDate(m.panneDepuis)+")":"Date de panne à renseigner"):d.txt;
+    return'<li><button class="row" data-id="'+esc(m.id)+'"><span class="bar '+(m.statut==="En panne"?"late":d.lvl)+'"></span><span class="main"><span class="code">'+esc(m.code)+"</span> "+pill(m.statut)+'<div class="name">'+esc(m.nom)+'</div><div class="meta">'+esc(m.secteur||"")+(m.compteur?", "+esc(m.compteur)+" h"+(m.compteurDate?" (relevé le "+esc(fmtDate(m.compteurDate))+")":""):"")+'</div><div class="meta">'+esc(line2)+"</div></span></button></li>"}).join("")+"</ul>";
+  qa($("machList"),".row").forEach(function(b){b.onclick=function(){openMachine(b.getAttribute("data-id"))}});
+}
+var dlg=$("dlg");
+function openDlg(html){$("dlgBody").innerHTML=html;if(!dlg.open)dlg.showModal()}
+function closeDlg(){dlg.close()}
+$("btnAddMach").onclick=function(){machineForm(null)};
+function machineForm(m){
+  m=m||{};
+  openDlg('<h2>'+(m.id?"Modifier la machine":"Ajouter une machine")+'</h2>'+
+  '<div class="grid2"><div><label for="mC">Code</label><input id="mC" value="'+esc(m.code||"")+'" placeholder="GOLF-MAT-15"></div>'+
+  '<div><label for="mS">Secteur</label><select id="mS"><option>Golf</option><option>Jardin</option></select></div></div>'+
+  '<label for="mN">Nom de la machine</label><input id="mN" value="'+esc(m.nom||"")+'">'+
+  '<label for="mF">Fonction <span class="hint">(facultatif)</span></label><input id="mF" value="'+esc(m.fonction||"")+'">'+
+  '<div class="grid2"><div><label for="mMo">Marque et modèle</label><input id="mMo" value="'+esc(m.modele||"")+'"></div>'+
+  '<div><label for="mA">Année d’achat</label><input id="mA" value="'+esc(m.annee||"")+'"></div>'+
+  '<div><label for="mCp">Compteur actuel <span class="hint">(h)</span></label><input id="mCp" inputmode="decimal" value="'+esc(m.compteur||"")+'"></div>'+
+  '<div><label for="mI">Entretien toutes les <span class="hint">(h)</span></label><input id="mI" inputmode="decimal" value="'+esc(m.intervalle||"")+'"></div>'+
+  '<div><label for="mJ">ou tous les <span class="hint">(jours)</span></label><input id="mJ" inputmode="numeric" value="'+esc(m.intervalleJours||"")+'"></div>'+
+  '<div><label for="mSt">État</label><select id="mSt"><option>En service</option><option>À surveiller</option><option>En panne</option></select></div></div>'+
+  '<div id="mPdWrap"><label for="mPd">En panne depuis le</label><input id="mPd" type="date" value="'+esc(m.panneDepuis||"")+'"></div>'+
+  '<label for="mR">Remarque</label><textarea id="mR">'+esc(m.notes||"")+'</textarea>'+
+  '<div class="actions">'+(m.id?'<button class="danger" id="mDel">Supprimer</button>':"")+'<button class="ghost" id="mCancel">Annuler</button><button id="mSave">Enregistrer</button></div>');
+  if(m.secteur)$("mS").value=m.secteur;if(m.statut)$("mSt").value=m.statut;
+  var tg=function(){$("mPdWrap").hidden=$("mSt").value!=="En panne"};tg();$("mSt").onchange=tg;
+  $("mCancel").onclick=closeDlg;
+  if(m.id)$("mDel").onclick=async function(){if(!confirm("Supprimer cette machine ? Ses interventions restent dans l’historique."))return;try{await delDoc("machines",m.id);closeDlg();toast("Machine supprimée")}catch(err){handleErr(err)}};
+  $("mSave").onclick=async function(){
+    var n={code:$("mC").value.trim(),secteur:$("mS").value,nom:$("mN").value.trim(),fonction:$("mF").value.trim(),modele:$("mMo").value.trim(),annee:$("mA").value.trim(),compteur:$("mCp").value.trim(),intervalle:$("mI").value.trim(),intervalleJours:$("mJ").value.trim(),notes:$("mR").value.trim()};
+    if(!n.code||!n.nom){toast("Le code et le nom sont obligatoires");return}
+    if([n.compteur,n.intervalle,n.intervalleJours].some(function(v){return v&&num(v)==null})){toast("Compteur et intervalles : chiffres uniquement");return}
+    if(n.compteur&&n.compteur!==m.compteur)n.compteurDate=today();else n.compteurDate=m.compteurDate||"";
+    $("mSave").disabled=true;
+    try{
+      var st=$("mSt").value,pd=$("mPd").value;
+      Object.assign(n,await statutPatch(m.id?m:{},st,today(),st==="En panne"?(pd||(m.statut==="En panne"?"":today())):(m.statut==="En panne"?(pd||m.panneDepuis):undefined)));
+      n.createdAt=m.createdAt||Date.now();
+      if(m.id)await setDoc("machines",m.id,n);else await addDoc("machines",n);
+      closeDlg();toast("Machine enregistrée")}catch(err){handleErr(err);$("mSave").disabled=false}
+  };
+}
+function openMachine(id){
+  var m=mach(id);if(!m)return;
+  var d=dueOf(m),h=histOf(id),pj=panneJours(m);
+  var imm=S.immobilisations.filter(function(x){return x.machineId===id}),totImm=imm.reduce(function(s,x){return s+(x.jours||0)},0)+(pj||0);
+  var pcs=S.pieces.filter(function(p){return p.machineId===id&&p.statut!=="Reçue"});
+  var lc=S.controles.filter(function(c){return c.machineId===id}).sort(function(a,b){return(b.date||"").localeCompare(a.date||"")||(b.createdAt||0)-(a.createdAt||0)})[0];
+  openDlg('<div class="code">'+esc(m.code)+'</div><h2>'+esc(m.nom)+'</h2>'+pill(m.statut)+
+  '<dl class="facts"><dt>Secteur</dt><dd>'+esc(m.secteur||"")+'</dd>'+(m.fonction?'<dt>Fonction</dt><dd>'+esc(m.fonction)+'</dd>':'')+(m.modele?'<dt>Modèle</dt><dd>'+esc(m.modele)+'</dd>':'')+'<dt>Achat</dt><dd>'+esc(m.annee||"Non renseigné")+'</dd>'+
+  '<dt>Compteur</dt><dd>'+(m.compteur?esc(m.compteur)+" h"+(m.compteurDate?" (le "+esc(fmtDate(m.compteurDate))+")":""):"Non relevé")+'</dd>'+
+  '<dt>Entretien</dt><dd>'+([m.intervalle?"toutes les "+esc(m.intervalle)+" h":"",m.intervalleJours?"tous les "+esc(m.intervalleJours)+" jours":""].filter(Boolean).join(" ou ")||"Non renseigné")+'</dd>'+
+  '<dt>Suivi</dt><dd>'+esc(d.txt)+'</dd>'+
+  (m.statut==="En panne"?'<dt>Immobilisée</dt><dd>'+(pj!=null?"depuis le "+esc(fmtDate(m.panneDepuis))+" ("+pj+" j)":"date de panne à renseigner")+'</dd>':'')+
+  '<dt>Total arrêts</dt><dd>'+totImm+' jours notés</dd>'+
+  '<dt>Dernier contrôle</dt><dd>'+(lc?esc(fmtDate(lc.date))+((lc.problemes||[]).length?" : "+esc(lc.problemes.join(", ")):", tout est bon"):"Aucun")+'</dd></dl>'+
+  (pcs.length?'<p class="meta"><b>Pièces en attente :</b> '+pcs.map(function(p){return esc(p.designation)+" ("+esc(p.statut)+")"}).join(", ")+'</p>':'')+
+  (m.notes?'<p class="meta small">'+esc(m.notes).replace(/\n/g,"<br>")+'</p>':'')+
+  '<div class="actions" style="justify-content:flex-start"><button data-write id="dNew">Noter une intervention</button><button class="ghost" data-write id="dCtrl">Contrôle</button><button class="ghost" data-write id="dPiece">Pièce à commander</button><button class="ghost" data-write id="dEdit">Modifier</button><button class="ghost" id="dClose">Fermer</button></div>'+
+  '<h2>Fiche de vie ('+h.length+')</h2>'+(h.length?'<ul class="list">'+h.map(entryHtml).join("")+"</ul>":'<p class="meta">Aucune intervention notée.</p>'));
+  applyWrite();bindDel($("dlgBody"));bindPhotos($("dlgBody"));
+  $("dClose").onclick=closeDlg;$("dEdit").onclick=function(){machineForm(m)};
+  $("dNew").onclick=function(){formState={machineId:id};closeDlg();location.hash="#intervention";renderForm()};
+  $("dCtrl").onclick=function(){ctrlState={machineId:id,items:{}};closeDlg();location.hash="#controle";renderCtrl()};
+  $("dPiece").onclick=function(){pieceForm({machineId:id})};
+}
+
+/* ---------- Saisie : intervention ---------- */
+var formState={};
+function renderForm(){
+  var w=$("formWrap");if(busy(w))return;
+  if(!S.machines.length){w.innerHTML='<div class="empty"><p>Ajoute d’abord une machine.</p></div>';return}
+  if(!S.canWrite){w.innerHTML='<div class="empty"><p>Ce lien permet seulement de consulter le carnet.</p></div>';return}
+  var f=formState;
+  w.innerHTML='<label for="iM">Machine</label><select id="iM">'+machineOptions(f.machineId)+'</select>'+
+  '<div class="grid2"><div><label for="iD">Date</label><input id="iD" type="date" value="'+esc(f.date||today())+'"></div>'+
+  '<div><label for="iT">Type</label><select id="iT"><option>Préventif</option><option>Correctif</option><option>Panne</option></select></div>'+
+  '<div><label for="iC">Compteur <span class="hint">(heures)</span></label><input id="iC" inputmode="decimal" value="'+esc(f.compteur||"")+'"></div>'+
+  '<div><label for="iMe">Mécanicien</label><input id="iMe" value="'+esc(f.mecanicien||"")+'"></div></div>'+
+  '<label for="iW">Travaux réalisés</label><textarea id="iW" placeholder="Vidange moteur, changement filtre à air, affûtage cylindres…">'+esc(f.travaux||"")+'</textarea>'+
+  '<label for="iP">Pièces changées <span class="hint">(facultatif)</span></label><input id="iP" value="'+esc(f.pieces||"")+'">'+
+  '<label for="iS">État de la machine après l’intervention</label><select id="iS"><option>En service</option><option>À surveiller</option><option>En panne</option></select>'+
+  '<label for="iN">Remarque <span class="hint">(facultatif)</span></label><input id="iN" value="'+esc(f.note||"")+'">'+
+  (S.assets?'<label>Photos <span class="hint">(pièce cassée, fuite, plaque de la machine…)</span></label><input id="iPh" type="file" accept="image/*" multiple hidden><input id="iCam" type="file" accept="image/*" capture="environment" hidden><div class="actions" style="justify-content:flex-start;margin-top:4px"><button type="button" class="ghost" id="iCamBtn">Prendre une photo</button><button type="button" class="ghost" id="iPhBtn">Choisir dans la galerie</button></div><div class="thumbs" id="iPhList"></div>':'')+
+  '<div class="actions"><button id="iSave">Enregistrer l’intervention</button></div>';
+  if(f.type)$("iT").value=f.type;if(f.statut)$("iS").value=f.statut;
+  $("iSave").onclick=saveIntervention;
+  if(S.assets){$("iPhBtn").onclick=function(){$("iPh").click()};$("iCamBtn").onclick=function(){$("iCam").click()};$("iCam").onchange=$("iPh").onchange=async function(){var fs=Array.prototype.slice.call(this.files||[]);this.value="";for(var i=0;i<fs.length;i++){try{(formState.pending=formState.pending||[]).push(await shrink(fs[i]))}catch(e){toast("Photo illisible")}}showPending()};showPending()}
+}
+function captureForm(ev){if(!$("formWrap").contains(ev.target)||!$("iM")||ev.target.type==="file")return;formState={pending:formState.pending,machineId:$("iM").value,date:$("iD").value,type:$("iT").value,compteur:$("iC").value,mecanicien:$("iMe").value,travaux:$("iW").value,pieces:$("iP").value,statut:$("iS").value,note:$("iN").value}}
+document.addEventListener("input",captureForm);document.addEventListener("change",captureForm);
+async function saveIntervention(){
+  var e={machineId:$("iM").value,date:$("iD").value||today(),type:$("iT").value,compteur:$("iC").value.trim(),mecanicien:$("iMe").value.trim(),travaux:$("iW").value.trim(),pieces:$("iP").value.trim(),statut:$("iS").value,note:$("iN").value.trim(),createdAt:Date.now()};
+  if(!e.machineId){toast("Choisis la machine");return}
+  if(!e.travaux){toast("Décris les travaux réalisés");return}
+  if(e.compteur&&num(e.compteur)==null){toast("Le compteur doit être un nombre");return}
+  var m=mach(e.machineId),btn=$("iSave");btn.disabled=true;
+  try{
+    var pend=formState.pending||[];
+    if(pend.length&&S.assets){e.photos=[];for(var i=0;i<pend.length;i++){btn.textContent="Envoi des photos "+(i+1)+"/"+pend.length+"…";e.photos.push(await call("uploadPhoto",await toDataUrl(pend[i])))}}
+    await addDoc("entretiens",e);
+    var patch=await statutPatch(m,e.statut,e.date);
+    if(num(e.compteur)!=null&&(num(m.compteur)==null||num(e.compteur)>=num(m.compteur))){patch.compteur=e.compteur;patch.compteurDate=e.date}
+    await patchDoc("machines",m.id,patch);
+    formState={};toast("Intervention enregistrée");if(document.activeElement)document.activeElement.blur();renderForm();location.hash="#historique";
+  }catch(err){handleErr(err);btn.disabled=false;btn.textContent="Enregistrer l’intervention"}
+}
+
+/* ---------- Saisie : compteurs ---------- */
+var cptDraft={};
+function renderCompteurs(){
+  var w=$("cptWrap");if(busy(w))return;
+  if(!S.machines.length){w.innerHTML='<div class="empty"><p>Ajoute d’abord une machine.</p></div>';return}
+  w.innerHTML='<ul class="list">'+S.machines.slice().sort(byCode).map(function(m){return'<li class="crow"><span class="main" style="flex:1"><span class="code">'+esc(m.code)+'</span><div class="name" style="font-size:15px">'+esc(m.nom)+'</div><div class="meta">'+(m.compteur?"Dernier : "+esc(m.compteur)+" h"+(m.compteurDate?" le "+esc(fmtDate(m.compteurDate)):""):"Jamais relevé")+'</div></span><input inputmode="decimal" aria-label="Heures '+esc(m.code)+'" data-cpt="'+esc(m.id)+'" placeholder="heures" value="'+esc(cptDraft[m.id]||"")+'"></li>'}).join("")+'</ul><div class="actions"><button id="cptSave" data-write>Enregistrer les relevés</button></div>';
+  qa(w,"[data-cpt]").forEach(function(i){i.oninput=function(){cptDraft[i.getAttribute("data-cpt")]=i.value}});
+  $("cptSave").onclick=saveCompteurs;applyWrite();
+}
+async function saveCompteurs(){
+  var ids=Object.keys(cptDraft).filter(function(k){return String(cptDraft[k]).trim()!==""});
+  if(!ids.length){toast("Aucun compteur saisi");return}
+  for(var i=0;i<ids.length;i++){var m=mach(ids[i]),v=num(cptDraft[ids[i]]);
+    if(v==null){toast(m.code+" : chiffres uniquement");return}
+    if(num(m.compteur)!=null&&v<num(m.compteur)){toast(m.code+" : "+v+" h est inférieur au dernier relevé ("+m.compteur+" h)");return}}
+  $("cptSave").disabled=true;
+  try{for(var j=0;j<ids.length;j++){await patchDoc("machines",ids[j],{compteur:String(num(cptDraft[ids[j]])),compteurDate:today()})}
+    cptDraft={};if(document.activeElement)document.activeElement.blur();toast(ids.length+" compteur"+(ids.length>1?"s enregistrés":" enregistré"));renderCompteurs()}
+  catch(err){handleErr(err);$("cptSave").disabled=false}
+}
+
+/* ---------- Saisie : contrôle du matin ---------- */
+var CHECKS=["Niveau d’huile moteur","Carburant","Liquide de refroidissement","Pneus et pression","Lames, couteaux ou cylindres","Aucune fuite (huile, hydraulique)","Graissage","Freins et sécurités"];
+var ctrlState={items:{}};
+function renderCtrl(){
+  var w=$("ctrlWrap");
+  if(!busy(w)){
+    if(!S.machines.length){w.innerHTML='<div class="empty"><p>Ajoute d’abord une machine.</p></div>'}
+    else if(!S.canWrite){w.innerHTML='<div class="empty"><p>Ce lien permet seulement de consulter le carnet.</p></div>'}
+    else{var c=ctrlState;c.items=c.items||{};
+      w.innerHTML='<label for="cM">Machine</label><select id="cM">'+machineOptions(c.machineId)+'</select>'+
+      '<div class="grid2"><div><label for="cD">Date</label><input id="cD" type="date" value="'+esc(c.date||today())+'"></div><div><label for="cP">Contrôlé par</label><input id="cP" value="'+esc(c.par||"")+'"></div></div>'+
+      '<p class="meta" style="margin-top:12px">Tout est « Bon » par défaut. Touche « Problème » si quelque chose ne va pas.</p>'+
+      '<ul class="list">'+CHECKS.map(function(k,i){var pb=c.items[k]==="Problème";return'<li class="chk"><span>'+esc(k)+'</span><span class="tog"><button type="button" data-k="'+i+'" data-v="Bon" class="okb'+(pb?"":" on")+'">Bon</button><button type="button" data-k="'+i+'" data-v="Problème" class="pbb'+(pb?" on":"")+'">Problème</button></span></li>'}).join("")+'</ul>'+
+      '<label for="cR">Remarque <span class="hint">(facultatif)</span></label><input id="cR" value="'+esc(c.remarque||"")+'">'+
+      '<div class="actions"><button id="cSave">Enregistrer le contrôle</button></div>';
+      qa(w,".tog button").forEach(function(b){b.onclick=function(){ctrlState.items[CHECKS[+b.getAttribute("data-k")]]=b.getAttribute("data-v");keepCtrl();renderCtrl()}});
+      ["cM","cD","cP","cR"].forEach(function(id){$(id).onchange=$(id).oninput=keepCtrl});
+      $("cSave").onclick=saveCtrl;}
+  }
+  var list=S.controles.slice().sort(function(a,b){return(b.date||"").localeCompare(a.date||"")||(b.createdAt||0)-(a.createdAt||0)}).slice(0,15);
+  $("ctrlList").innerHTML=list.length?'<ul class="list">'+list.map(function(c){var p=c.problemes||[];return'<li class="entry"><div class="top"><span><b>'+esc(fmtDate(c.date))+"</b>, "+esc(mLabel(c.machineId))+'</span>'+(p.length?'<span class="pill down">'+p.length+' problème'+(p.length>1?"s":"")+'</span>':'<span class="pill ok">Tout est bon</span>')+'</div>'+(c.par?'<div class="meta">Par '+esc(c.par)+'</div>':'')+(p.length?'<p>'+esc(p.join(", "))+'</p>':'')+(c.remarque?'<p class="meta">'+esc(c.remarque)+'</p>':'')+'<div class="actions" style="margin-top:6px"><button class="danger" data-write data-delc="'+esc(c.id)+'">Supprimer</button></div></li>'}).join("")+'</ul>':'<div class="empty"><p>Aucun contrôle enregistré.</p></div>';
+  qa($("ctrlList"),"[data-delc]").forEach(function(b){b.onclick=async function(){if(!confirm("Supprimer ce contrôle ?"))return;try{await delDoc("controles",b.getAttribute("data-delc"));toast("Contrôle supprimé")}catch(err){handleErr(err)}}});
+  applyWrite();
+}
+function keepCtrl(){if(!$("cM"))return;ctrlState.machineId=$("cM").value;ctrlState.date=$("cD").value;ctrlState.par=$("cP").value;ctrlState.remarque=$("cR").value}
+async function saveCtrl(){
+  keepCtrl();var c=ctrlState;
+  if(!c.machineId){toast("Choisis la machine");return}
+  var items={},pbs=[];CHECKS.forEach(function(k){items[k]=c.items[k]==="Problème"?"Problème":"Bon";if(items[k]==="Problème")pbs.push(k)});
+  $("cSave").disabled=true;
+  try{await addDoc("controles",{machineId:c.machineId,date:c.date||today(),par:(c.par||"").trim(),items:items,problemes:pbs,remarque:(c.remarque||"").trim(),createdAt:Date.now()});
+    var par=c.par;ctrlState={items:{},par:par};if(document.activeElement)document.activeElement.blur();
+    toast(pbs.length?"Contrôle enregistré : "+pbs.length+" problème"+(pbs.length>1?"s":"")+" à traiter":"Contrôle enregistré, tout est bon");renderCtrl()}
+  catch(err){handleErr(err);$("cSave").disabled=false}
+}
+
+/* ---------- Pièces ---------- */
+$("btnAddPiece").onclick=function(){pieceForm({})};
+$("pFiltre").onchange=renderPieces;
+function renderPieces(){
+  var cnt={};STEPS.forEach(function(s){cnt[s]=0});S.pieces.forEach(function(p){cnt[p.statut||STEPS[0]]++});
+  $("pSummary").innerHTML='<div class="late"><b>'+cnt["À trouver"]+'</b><span>à trouver</span></div><div class="soon"><b>'+cnt["Fournisseur trouvé"]+'</b><span>fournisseur trouvé</span></div><div><b>'+cnt["Commandée"]+'</b><span>commandées</span></div><div><b>'+cnt["Reçue"]+'</b><span>reçues</span></div>';
+  var f=$("pFiltre").value;
+  var list=S.pieces.filter(function(p){return f==="encours"?p.statut!=="Reçue":(!f||p.statut===f)}).sort(function(a,b){return STEPS.indexOf(a.statut)-STEPS.indexOf(b.statut)||(a.createdAt||0)-(b.createdAt||0)});
+  if(!list.length){$("pList").innerHTML='<div class="empty"><p>'+(S.pieces.length?"Aucune pièce pour ce filtre.":"Aucune pièce à commander pour l’instant.")+'</p></div>';return}
+  $("pList").innerHTML='<ul class="list">'+list.map(function(p){var i=STEPS.indexOf(p.statut),nx=i<3?STEPS[i+1]:null;
+    var d=p.statut==="Reçue"&&p.dateReception?"Reçue le "+fmtDate(p.dateReception):p.statut==="Commandée"&&p.dateCommande?"Commandée le "+fmtDate(p.dateCommande):p.dateDemande?"Demandée le "+fmtDate(p.dateDemande):"";
+    return'<li class="entry"><div class="top"><span><b>'+esc(p.designation)+'</b>'+(p.quantite?" × "+esc(p.quantite):"")+'</span>'+stepPill(p.statut)+'</div><div class="meta">'+esc(p.machineId?mLabel(p.machineId):"Pièce générale")+(p.reference?", réf. "+esc(p.reference):"")+'</div>'+(p.fournisseur?'<div class="meta">Fournisseur : '+esc(p.fournisseur)+'</div>':'')+(d?'<div class="meta">'+esc(d)+'</div>':'')+(p.note?'<p class="meta">'+esc(p.note)+'</p>':'')+
+    '<div class="actions" style="margin-top:8px;justify-content:flex-start">'+(nx?'<button data-write data-next="'+esc(p.id)+'">Passer à : '+esc(nx)+'</button>':'')+'<button class="ghost" data-write data-editp="'+esc(p.id)+'">Modifier</button></div></li>'}).join("")+'</ul>';
+  qa($("pList"),"[data-next]").forEach(function(b){b.onclick=function(){var p=S.pieces.find(function(x){return x.id===b.getAttribute("data-next")});advance(p)}});
+  qa($("pList"),"[data-editp]").forEach(function(b){b.onclick=function(){pieceForm(S.pieces.find(function(x){return x.id===b.getAttribute("data-editp")}))}});
+  applyWrite();
+}
+function stepDates(old,st){var p={statut:st};if(st==="Commandée"&&!old.dateCommande)p.dateCommande=today();if(st==="Reçue"&&!old.dateReception)p.dateReception=today();return p}
+async function advance(p){var i=STEPS.indexOf(p.statut);if(i>=3)return;var st=STEPS[i+1];try{await patchDoc("pieces",p.id,stepDates(p,st));toast(p.designation+" : "+st)}catch(err){handleErr(err)}}
+function pieceForm(p){
+  p=p||{};
+  openDlg('<h2>'+(p.id?"Modifier la pièce":"Ajouter une pièce à commander")+'</h2>'+
+  '<label for="pD">Pièce</label><input id="pD" value="'+esc(p.designation||"")+'" placeholder="Filtre à huile, courroie, injecteur…">'+
+  '<label for="pM">Machine</label><select id="pM">'+machineOptions(p.machineId,"Pièce générale (aucune machine)")+'</select>'+
+  '<div class="grid2"><div><label for="pR">Référence</label><input id="pR" value="'+esc(p.reference||"")+'"></div><div><label for="pQ">Quantité</label><input id="pQ" inputmode="numeric" value="'+esc(p.quantite||"")+'"></div>'+
+  '<div><label for="pF">Fournisseur</label><input id="pF" value="'+esc(p.fournisseur||"")+'"></div><div><label for="pS">Avancement</label><select id="pS">'+STEPS.map(function(s){return"<option>"+s+"</option>"}).join("")+'</select></div></div>'+
+  '<label for="pN">Remarque</label><textarea id="pN">'+esc(p.note||"")+'</textarea>'+
+  '<div class="actions">'+(p.id?'<button class="danger" id="pDel">Supprimer</button>':"")+'<button class="ghost" id="pCancel">Annuler</button><button id="pSave">Enregistrer</button></div>');
+  if(p.statut)$("pS").value=p.statut;
+  $("pCancel").onclick=closeDlg;
+  if(p.id)$("pDel").onclick=async function(){if(!confirm("Supprimer cette pièce ?"))return;try{await delDoc("pieces",p.id);closeDlg();toast("Pièce supprimée")}catch(err){handleErr(err)}};
+  $("pSave").onclick=async function(){
+    var n={designation:$("pD").value.trim(),machineId:$("pM").value,reference:$("pR").value.trim(),quantite:$("pQ").value.trim(),fournisseur:$("pF").value.trim(),note:$("pN").value.trim(),dateDemande:p.dateDemande!==undefined?p.dateDemande:today(),dateCommande:p.dateCommande||"",dateReception:p.dateReception||"",createdAt:p.createdAt||Date.now()};
+    if(!n.designation){toast("Indique le nom de la pièce");return}
+    Object.assign(n,stepDates(p,$("pS").value));
+    $("pSave").disabled=true;
+    try{if(p.id)await setDoc("pieces",p.id,n);else await addDoc("pieces",n);closeDlg();toast("Pièce enregistrée")}catch(err){handleErr(err);$("pSave").disabled=false}
+  };
+}
+
+/* ---------- Bilan du mois ---------- */
+function monthRange(v){var y=+v.slice(0,4),mo=+v.slice(5,7);var last=new Date(y,mo,0).getDate();return[v+"-01",v+"-"+String(last).padStart(2,"0")]}
+function overlap(a,b,s,e){var x=a>s?a:s,y=b<e?b:e;return y>x?diffDays(x,y):0}
+function bilanData(){
+  var v=$("bMois").value||today().slice(0,7),r=monthRange(v),s=r[0],e=r[1],t=today(),eEff=e<t?e:t;
+  var inM=function(d){return d&&d>=s&&d<=e};
+  var ent=S.entretiens.filter(function(x){return inM(x.date)});
+  var typ={"Préventif":0,"Correctif":0,"Panne":0};ent.forEach(function(x){typ[x.type]=(typ[x.type]||0)+1});
+  var immo={};
+  S.immobilisations.forEach(function(x){var d=overlap(x.debut,x.fin,s,eEff);if(d)immo[x.machineId]=(immo[x.machineId]||0)+d});
+  var sansDate=0;
+  S.machines.forEach(function(m){if(m.statut==="En panne"){if(m.panneDepuis){var d=overlap(m.panneDepuis,t,s,eEff);if(d)immo[m.id]=(immo[m.id]||0)+d}else sansDate++}});
+  var totImm=Object.keys(immo).reduce(function(a,k){return a+immo[k]},0);
+  var down=S.machines.filter(function(m){return m.statut==="En panne"}).length;
+  var rep={};ent.forEach(function(x){if(x.type!=="Préventif")rep[x.machineId]=(rep[x.machineId]||0)+1});
+  var ctr=S.controles.filter(function(x){return inM(x.date)});
+  return{mois:v,s:s,e:e,ent:ent,typ:typ,immo:immo,totImm:totImm,sansDate:sansDate,
+    dispo:S.machines.length?Math.round((S.machines.length-down)/S.machines.length*100):0,down:down,
+    pCmd:S.pieces.filter(function(p){return inM(p.dateCommande)}).length,pRec:S.pieces.filter(function(p){return inM(p.dateReception)}).length,pAtt:S.pieces.filter(function(p){return p.statut!=="Reçue"}).length,
+    ctr:ctr.length,ctrPb:ctr.filter(function(c){return(c.problemes||[]).length}).length,
+    rep:Object.keys(rep).sort(function(a,b){return rep[b]-rep[a]}).slice(0,3).map(function(k){return[k,rep[k]]})};
+}
+var MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function moisTxt(v){return MOIS[+v.slice(5,7)-1]+" "+v.slice(0,4)}
+function renderBilan(){
+  if(!$("bMois").value)$("bMois").value=today().slice(0,7);
+  var b=bilanData();
+  var immL=Object.keys(b.immo).sort(function(x,y){return b.immo[y]-b.immo[x]});
+  $("bilanWrap").innerHTML='<div class="kpis"><div><b>'+b.ent.length+'</b><span>interventions en '+esc(moisTxt(b.mois))+'</span></div><div><b>'+b.dispo+' %</b><span>du parc disponible aujourd’hui</span></div><div><b>'+b.totImm+'</b><span>jours d’immobilisation dans le mois</span></div><div><b>'+b.pAtt+'</b><span>pièces en attente</span></div></div>'+
+  '<div class="card"><h3>Interventions</h3><p>Préventif : <b>'+b.typ["Préventif"]+'</b>, correctif : <b>'+b.typ["Correctif"]+'</b>, panne : <b>'+b.typ["Panne"]+'</b></p>'+(b.rep.length?'<p class="meta">Machines les plus réparées : '+b.rep.map(function(x){return esc(mLabel(x[0]))+" ("+x[1]+")"}).join(", ")+'</p>':'')+'</div>'+
+  '<div class="card"><h3>Immobilisations</h3>'+(immL.length?immL.map(function(k){return'<p>'+esc(mLabel(k))+' : <b>'+b.immo[k]+' j</b></p>'}).join(""):'<p class="meta">Aucun jour d’arrêt noté sur ce mois.</p>')+(b.sansDate?'<p class="meta">'+b.sansDate+' machine'+(b.sansDate>1?"s":"")+' en panne sans date de début : renseigne la date dans « Modifier » pour la compter.</p>':'')+'</div>'+
+  '<div class="card"><h3>Pièces</h3><p>Commandées dans le mois : <b>'+b.pCmd+'</b>, reçues : <b>'+b.pRec+'</b>, encore en attente : <b>'+b.pAtt+'</b></p></div>'+
+  '<div class="card"><h3>Contrôles du matin</h3><p>Contrôles faits : <b>'+b.ctr+'</b>, avec au moins un problème : <b>'+b.ctrPb+'</b></p></div>';
+}
+$("bMois").onchange=renderBilan;
+$("btnBilanCsv").onclick=async function(){
+  var b=bilanData(),rows=[["Bilan",moisTxt(b.mois)],["Interventions",b.ent.length],["Préventif",b.typ["Préventif"]],["Correctif",b.typ["Correctif"]],["Panne",b.typ["Panne"]],["Parc disponible aujourd’hui (%)",b.dispo],["Jours d’immobilisation",b.totImm]];
+  Object.keys(b.immo).forEach(function(k){rows.push(["Immobilisation "+mLabel(k)+" (j)",b.immo[k]])});
+  rows.push(["Pièces commandées",b.pCmd],["Pièces reçues",b.pRec],["Pièces en attente",b.pAtt],["Contrôles faits",b.ctr],["Contrôles avec problème",b.ctrPb]);
+  var btn=$("btnBilanCsv");btn.disabled=true;btn.textContent="Préparation…";
+  try{var u=await call("writeBilan",rows);var l=$("bilanLink");l.href=u;l.hidden=false;toast("Bilan prêt dans l’onglet « Bilan »")}catch(err){handleErr(err)}
+  btn.disabled=false;btn.textContent="Préparer le bilan dans Google Sheets";
+};
+
+/* ---------- Historique ---------- */
+$("hMach").onchange=renderHist;$("hType").onchange=renderHist;
+function renderHist(){
+  var sel=$("hMach").value;$("hMach").innerHTML=machineOptions(sel,"Toutes les machines");
+  var t=$("hType").value;
+  var list=S.entretiens.filter(function(e){return(!sel||e.machineId===sel)&&(!t||e.type===t)}).sort(function(a,b){return(b.date||"").localeCompare(a.date||"")||(b.createdAt||0)-(a.createdAt||0)});
+  if(!list.length){$("histList").innerHTML='<div class="empty"><p>'+(S.entretiens.length?"Aucune intervention pour ce filtre.":"Aucune intervention notée pour l’instant.")+"</p></div>";return}
+  $("histList").innerHTML='<ul class="list">'+list.map(entryHtml).join("")+"</ul>";
+  bindDel($("histList"));bindPhotos($("histList"));applyWrite();
+}
+function entryHtml(e){
+  return'<li class="entry"><div class="top"><span><b>'+esc(fmtDate(e.date))+"</b>, "+esc(e.type)+(e.compteur?", "+esc(e.compteur)+" h":"")+"</span>"+pill(e.statut)+'</div><div class="meta">'+esc(mLabel(e.machineId))+(e.mecanicien?", par "+esc(e.mecanicien):"")+"</div><p>"+esc(e.travaux)+"</p>"+(e.pieces?'<p class="meta">Pièces : '+esc(e.pieces)+"</p>":"")+(e.note?'<p class="meta">'+esc(e.note)+"</p>":"")+(e.photos&&e.photos.length?'<div class="thumbs">'+e.photos.map(function(id,i){return'<button type="button" data-photo="'+esc(id)+'" aria-label="Voir la photo '+(i+1)+'"><img loading="lazy" alt="" src="'+esc(photoUrl(id))+'"></button>'}).join("")+"</div>":"")+'<div class="actions" style="margin-top:8px"><button class="danger" data-write data-del="'+esc(e.id)+'">Supprimer</button></div></li>';
+}
+function bindDel(root){qa(root,"[data-del]").forEach(function(b){b.onclick=async function(){if(!confirm("Supprimer cette intervention ?"))return;var id=b.getAttribute("data-del"),e=S.entretiens.find(function(x){return x.id===id});try{await delDoc("entretiens",id);if(e&&e.photos){for(var i=0;i<e.photos.length;i++){try{await call("deletePhoto",e.photos[i])}catch(x){}}}toast("Intervention supprimée")}catch(err){handleErr(err)}}})}
+/* ---------- Navigation ---------- */
+var ROUTES={machines:["machines"],intervention:["saisie","intervention"],compteurs:["saisie","compteurs"],controle:["saisie","controle"],pieces:["pieces"],bilan:["bilan"],historique:["historique"]};
+function route(){
+  var h=(location.hash||"").slice(1);if(!ROUTES[h])h="machines";var r=ROUTES[h];
+  ["machines","saisie","pieces","bilan","historique"].forEach(function(n){$("v-"+n).hidden=n!==r[0]});
+  qa(document,"nav a").forEach(function(a){if(a.getAttribute("data-v")===r[0])a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  if(r[1]){["intervention","compteurs","controle"].forEach(function(s){$("s-"+s).hidden=s!==r[1]});qa(document,".seg a").forEach(function(a){if(a.getAttribute("data-s")===r[1])a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")})}
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+$("q").oninput=renderMachines;$("fSecteur").onchange=renderMachines;
+
+function handleErr(err){if(err&&err.code==="code"){setCode("");showLogin("Code d’accès incorrect.");return}toast("Enregistrement impossible"+(err&&err.message?" : "+err.message:"")+". Vérifie la connexion et réessaie.")}
+function notice(t){var n=$("notice");n.textContent=t;n.hidden=!t}
+
+/* ---------- Démarrage ---------- */
+route();render();
+function showLogin(msg){$("login").hidden=false;var e=$("lgErr");e.textContent=msg||"";e.hidden=!msg;setTimeout(function(){$("lgCode").focus()},50)}
+function charger(){return call("getAll").then(function(all){notice("");$("login").hidden=true;apply(all)})}
+function demarrer(){
+  if(!getCode()){showLogin();return}
+  notice("Chargement du carnet…");
+  charger().catch(function(err){notice("");if(err&&err.code==="code"){setCode("");showLogin("Code d’accès incorrect.")}else if(err&&err.code==="config")notice(err.message);else notice("Impossible de charger le carnet. Vérifie la connexion internet puis recharge la page.")});
+}
+$("lgBtn").onclick=function(){var v=$("lgCode").value.trim();if(!v)return;setCode(v);$("lgBtn").disabled=true;$("lgBtn").textContent="Vérification…";
+  charger().catch(function(err){setCode("");showLogin(err&&err.code==="code"?"Code d’accès incorrect.":(err&&err.message)||"Connexion impossible.")}).then(function(){$("lgBtn").disabled=false;$("lgBtn").textContent="Entrer"})};
+$("lgCode").addEventListener("keydown",function(e){if(e.key==="Enter")$("lgBtn").click()});
+demarrer();
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+setInterval(function(){if(!getCode()||!$("login").hidden||document.hidden||dlg.open||$("lb").open)return;var a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;charger().catch(function(){})},60000);
+})();
+</script>
+</body>
+</html>

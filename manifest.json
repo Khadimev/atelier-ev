@@ -1,0 +1,17 @@
+{
+  "name": "Atelier Espaces Verts",
+  "short_name": "Atelier EV",
+  "description": "Carnet d’entretien du matériel Golf et Jardin, Club Med Cap Skirring",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1F4D3A",
+  "theme_color": "#1F4D3A",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
