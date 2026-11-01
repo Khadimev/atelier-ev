@@ -44,7 +44,7 @@ header.top .in{max-width:720px;margin:0 auto}
 h1{font:700 30px/1.05 "Barlow Condensed",system-ui,sans-serif;margin:0;letter-spacing:.2px}
 .sub{opacity:.85;font-size:14px;margin:4px 0 12px}
 nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
-nav a{flex:1 0 auto;text-align:center;padding:10px 5px 12px;color:var(--on-green);text-decoration:none;font-weight:600;font-size:14px;opacity:.75;border-bottom:4px solid transparent}
+nav a{flex:1 0 auto;text-align:center;padding:10px 4px 12px;color:var(--on-green);text-decoration:none;font-weight:600;font-size:13px;opacity:.75;border-bottom:4px solid transparent}
 nav a[aria-current="page"]{opacity:1;border-bottom-color:var(--yellow)}
 nav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
 .notice{margin:14px 0 0;padding:10px 12px;border-radius:8px;background:var(--yellow-soft);font-size:14px}
@@ -148,6 +148,7 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
     <a href="#machines" data-v="machines">Machines</a>
     <a href="#intervention" data-v="saisie">Saisie</a>
     <a href="#pieces" data-v="pieces">Pièces</a>
+    <a href="#manuels" data-v="manuels">Manuels</a>
     <a href="#bilan" data-v="bilan">Bilan</a>
     <a href="#historique" data-v="historique">Historique</a>
   </nav>
@@ -192,6 +193,12 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
     <div class="tools"><input id="bMois" type="month" aria-label="Mois"></div>
     <div id="bilanWrap"></div>
     <div class="actions" style="justify-content:flex-start"><button class="ghost" id="btnBilanCsv">Préparer le bilan dans Google Sheets</button><a class="ghost btnlink" id="bilanLink" target="_blank" rel="noopener" hidden>Ouvrir le bilan</a></div>
+  </section>
+
+  <section id="v-manuels" hidden>
+    <h2>Manuels des machines</h2>
+    <p class="meta">Touche « Ouvrir le manuel » pour lire le manuel de la machine. Pour ajouter un manuel, touche « Ajouter le lien » puis colle le lien du PDF ou de la page du fabricant.</p>
+    <div id="manList"></div>
   </section>
 
   <section id="v-historique" hidden>
@@ -294,7 +301,7 @@ $("lbClose").onclick=function(){$("lb").close()};
 function bindPhotos(root){qa(root,"[data-photo]").forEach(function(b){b.onclick=function(){openPhoto(b.getAttribute("data-photo"))}})}
 
 /* ---------- Affichage général ---------- */
-function render(){renderMachines();renderForm();renderCompteurs();renderCtrl();renderPieces();renderBilan();renderHist();applyWrite()}
+function render(){renderMachines();renderManuels();renderForm();renderCompteurs();renderCtrl();renderPieces();renderBilan();renderHist();applyWrite()}
 function applyWrite(){qa(document,"[data-write]").forEach(function(el){el.hidden=!S.canWrite})}
 function busy(container){return document.activeElement&&container.contains(document.activeElement)&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)}
 function machineOptions(sel,allLabel){
@@ -335,6 +342,8 @@ function machineForm(m){
   '<div><label for="mJ">ou tous les <span class="hint">(jours)</span></label><input id="mJ" inputmode="numeric" value="'+esc(m.intervalleJours||"")+'"></div>'+
   '<div><label for="mSt">État</label><select id="mSt"><option>En service</option><option>À surveiller</option><option>En panne</option></select></div></div>'+
   '<div id="mPdWrap"><label for="mPd">En panne depuis le</label><input id="mPd" type="date" value="'+esc(m.panneDepuis||"")+'"></div>'+
+  '<label for="mMa">Lien du manuel <span class="hint">(PDF ou page du fabricant)</span></label><input id="mMa" inputmode="url" placeholder="https://…" value="'+esc(m.manuel||"")+'">'+
+  '<label for="mMi">Info sur le manuel <span class="hint">(facultatif)</span></label><input id="mMi" value="'+esc(m.manuelInfo||"")+'">'+
   '<label for="mR">Remarque</label><textarea id="mR">'+esc(m.notes||"")+'</textarea>'+
   '<div class="actions">'+(m.id?'<button class="danger" id="mDel">Supprimer</button>':"")+'<button class="ghost" id="mCancel">Annuler</button><button id="mSave">Enregistrer</button></div>');
   if(m.secteur)$("mS").value=m.secteur;if(m.statut)$("mSt").value=m.statut;
@@ -342,7 +351,8 @@ function machineForm(m){
   $("mCancel").onclick=closeDlg;
   if(m.id)$("mDel").onclick=async function(){if(!confirm("Supprimer cette machine ? Ses interventions restent dans l’historique."))return;try{await delDoc("machines",m.id);closeDlg();toast("Machine supprimée")}catch(err){handleErr(err)}};
   $("mSave").onclick=async function(){
-    var n={code:$("mC").value.trim(),secteur:$("mS").value,nom:$("mN").value.trim(),fonction:$("mF").value.trim(),modele:$("mMo").value.trim(),annee:$("mA").value.trim(),compteur:$("mCp").value.trim(),intervalle:$("mI").value.trim(),intervalleJours:$("mJ").value.trim(),notes:$("mR").value.trim()};
+    var n={code:$("mC").value.trim(),secteur:$("mS").value,nom:$("mN").value.trim(),fonction:$("mF").value.trim(),modele:$("mMo").value.trim(),annee:$("mA").value.trim(),compteur:$("mCp").value.trim(),intervalle:$("mI").value.trim(),intervalleJours:$("mJ").value.trim(),notes:$("mR").value.trim(),manuel:$("mMa").value.trim(),manuelInfo:$("mMi").value.trim()};
+    if(n.manuel&&!/^https?:\/\//i.test(n.manuel)){toast("Le lien du manuel doit commencer par https://");return}
     if(!n.code||!n.nom){toast("Le code et le nom sont obligatoires");return}
     if([n.compteur,n.intervalle,n.intervalleJours].some(function(v){return v&&num(v)==null})){toast("Compteur et intervalles : chiffres uniquement");return}
     if(n.compteur&&n.compteur!==m.compteur)n.compteurDate=today();else n.compteurDate=m.compteurDate||"";
@@ -368,6 +378,7 @@ function openMachine(id){
   '<dt>Suivi</dt><dd>'+esc(d.txt)+'</dd>'+
   (m.statut==="En panne"?'<dt>Immobilisée</dt><dd>'+(pj!=null?"depuis le "+esc(fmtDate(m.panneDepuis))+" ("+pj+" j)":"date de panne à renseigner")+'</dd>':'')+
   '<dt>Total arrêts</dt><dd>'+totImm+' jours notés</dd>'+
+  '<dt>Manuel</dt><dd>'+(safeUrl(m.manuel)?'<a href="'+esc(m.manuel)+'" target="_blank" rel="noopener">Ouvrir le manuel</a>':"Pas encore de manuel")+'</dd>'+
   '<dt>Dernier contrôle</dt><dd>'+(lc?esc(fmtDate(lc.date))+((lc.problemes||[]).length?" : "+esc(lc.problemes.join(", ")):", tout est bon"):"Aucun")+'</dd></dl>'+
   (pcs.length?'<p class="meta"><b>Pièces en attente :</b> '+pcs.map(function(p){return esc(p.designation)+" ("+esc(p.statut)+")"}).join(", ")+'</p>':'')+
   (m.notes?'<p class="meta small">'+esc(m.notes).replace(/\n/g,"<br>")+'</p>':'')+
@@ -378,6 +389,21 @@ function openMachine(id){
   $("dNew").onclick=function(){formState={machineId:id};closeDlg();location.hash="#intervention";renderForm()};
   $("dCtrl").onclick=function(){ctrlState={machineId:id,items:{}};closeDlg();location.hash="#controle";renderCtrl()};
   $("dPiece").onclick=function(){pieceForm({machineId:id})};
+}
+
+/* ---------- Manuels ---------- */
+function safeUrl(u){return typeof u==="string"&&/^https?:\/\//i.test(u)}
+function renderManuels(){
+  var w=$("manList");if(!w)return;
+  if(!S.machines.length){w.innerHTML='<div class="empty"><p>Aucune machine enregistrée.</p></div>';return}
+  w.innerHTML='<ul class="list">'+S.machines.slice().sort(byCode).map(function(m){
+    return'<li class="entry"><div class="top"><span><span class="code">'+esc(m.code)+'</span><div class="name">'+esc(m.nom)+'</div></span></div>'+
+    (m.manuelInfo?'<p class="meta">'+esc(m.manuelInfo)+'</p>':'')+
+    '<div class="actions" style="margin-top:8px;justify-content:flex-start">'+
+    (safeUrl(m.manuel)?'<a class="btnlink" style="background:var(--green);color:var(--on-green);border-color:var(--green)" href="'+esc(m.manuel)+'" target="_blank" rel="noopener">Ouvrir le manuel</a>':'<span class="meta">Pas encore de manuel</span>')+
+    '<button class="ghost" data-write data-man="'+esc(m.id)+'">'+(m.manuel?'Modifier le lien':'Ajouter le lien')+'</button></div></li>'}).join("")+'</ul>';
+  qa(w,"[data-man]").forEach(function(b){b.onclick=function(){machineForm(mach(b.getAttribute("data-man")))}});
+  applyWrite();
 }
 
 /* ---------- Saisie : intervention ---------- */
@@ -577,10 +603,10 @@ function entryHtml(e){
 }
 function bindDel(root){qa(root,"[data-del]").forEach(function(b){b.onclick=async function(){if(!confirm("Supprimer cette intervention ?"))return;var id=b.getAttribute("data-del"),e=S.entretiens.find(function(x){return x.id===id});try{await delDoc("entretiens",id);if(e&&e.photos){for(var i=0;i<e.photos.length;i++){try{await call("deletePhoto",e.photos[i])}catch(x){}}}toast("Intervention supprimée")}catch(err){handleErr(err)}}})}
 /* ---------- Navigation ---------- */
-var ROUTES={machines:["machines"],intervention:["saisie","intervention"],compteurs:["saisie","compteurs"],controle:["saisie","controle"],pieces:["pieces"],bilan:["bilan"],historique:["historique"]};
+var ROUTES={machines:["machines"],manuels:["manuels"],intervention:["saisie","intervention"],compteurs:["saisie","compteurs"],controle:["saisie","controle"],pieces:["pieces"],bilan:["bilan"],historique:["historique"]};
 function route(){
   var h=(location.hash||"").slice(1);if(!ROUTES[h])h="machines";var r=ROUTES[h];
-  ["machines","saisie","pieces","bilan","historique"].forEach(function(n){$("v-"+n).hidden=n!==r[0]});
+  ["machines","saisie","pieces","manuels","bilan","historique"].forEach(function(n){$("v-"+n).hidden=n!==r[0]});
   qa(document,"nav a").forEach(function(a){if(a.getAttribute("data-v")===r[0])a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
   if(r[1]){["intervention","compteurs","controle"].forEach(function(s){$("s-"+s).hidden=s!==r[1]});qa(document,".seg a").forEach(function(a){if(a.getAttribute("data-s")===r[1])a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")})}
   window.scrollTo(0,0);
